@@ -1,0 +1,18 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  font-family: "Arial Black", Gadget, sans-serif;
+}
+
+body {
+  background-color: seagreen;
+}
+
+canvas {
+  image-rendering: crisp-edges;
+  width: 400px;
+  height: 400px;
+  background-color: rebeccapurple;
+}
