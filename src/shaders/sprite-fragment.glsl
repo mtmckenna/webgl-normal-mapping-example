@@ -10,6 +10,7 @@ uniform sampler2D uSpriteSampler;
 uniform sampler2D uNormalSampler;
 uniform vec3 uLightPos;
 uniform float uTime;
+uniform bool uNormalMapOn;
 
 void main(void) {
   vec3 lightColor = vec3(1.0, 1.0, 1.0);
@@ -19,11 +20,16 @@ void main(void) {
 
   float light = dot(normalize(normalMap), normalize(uLightPos));
 
+  // http://learnwebgl.brown37.net/09_lights/lights_attenuation.html
   float d = length(uLightPos - vWorldPos.xyz);
-  float attenuation = clamp(0.5 / d + 0.5 / pow(d, 10.0), 0.0, 1.0);
+  float attenuation = clamp(.5 / d + .5 / pow(d, 20.0), 0.0, 1.0);
   light = attenuation * light;
 
   gl_FragColor = color;
-  gl_FragColor.rgb += light * lightColor; 
 
+  if (uNormalMapOn) {
+    gl_FragColor.rgb += light * lightColor; 
+  } else {
+    gl_FragColor.rgb += .5 * attenuation * lightColor; 
+  }
 }

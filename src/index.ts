@@ -4,6 +4,7 @@
 import { mat4, vec2, vec3 } from "gl-matrix";
 
 import {
+  BufferBag,
   compiledProgram,
   cacheAttributeLocations,
   cacheUniformLocations,
@@ -28,6 +29,7 @@ const UNIFORM_NAMES = [
   "uNormals",
   "uTime",
   "uLightPos",
+  "uNormalMapOn",
 ];
 
 const ATTRIBUTE_NAMES = [
@@ -50,6 +52,7 @@ const QUAD_POSITIONS = [
 
 const T_TX_MIN = 0.0;
 const T_TX_MAX = 0.5;
+
 // prettier-ignore
 const TEXTURE_COORDS = [
   T_TX_MIN, T_TX_MIN,
@@ -60,15 +63,22 @@ const TEXTURE_COORDS = [
   T_TX_MAX, T_TX_MIN
 ];
 
-const canvas = <HTMLCanvasElement>document.getElementById("game");
-const gl = canvas.getContext("webgl");
+const normalCanvas = <HTMLCanvasElement>(
+  document.getElementById("normal-mapping")
+);
+const normalGl = normalCanvas.getContext("webgl");
+
+const basicCanvas = <HTMLCanvasElement>document.getElementById("basic");
+const basicGl = basicCanvas.getContext("webgl");
 
 const numTiles = 9;
 const numTilesPerRow = 3;
 const zNear = 0.1;
 const zFar = 100.0;
 const camera = { x: 1.5, y: 1.5, z: 3.0 };
-const lightRadius = 1.5;
+const lightRadius = 0.75;
+const lightOffset = 1.5;
+const lightZ = 1;
 const fieldOfView = deg2rad(45);
 
 let vertexPositions = [];
@@ -102,30 +112,75 @@ for (let i = 0; i < vertexPositions.length / 3; i++) {
 
 const textureUrl = `/brick.png`;
 const normalTextureUrl = `/brick-n.png`;
-let texture = loadTexture(gl, textureUrl);
-let normalTexture = loadTexture(gl, normalTextureUrl);
+let normalProgramTexture = loadTexture(normalGl, textureUrl);
+let normalProgramNormalTexture = loadTexture(normalGl, normalTextureUrl);
+let basicProgramTexture = loadTexture(basicGl, textureUrl);
+let basicProgramNormalTexture = loadTexture(basicGl, normalTextureUrl);
 
 const projectionMatrix = mat4.create();
 const modelMatrix = mat4.create();
 const viewMatrix = mat4.create();
 
-const buffers = {
-  positions: gl.createBuffer(),
-  normals: gl.createBuffer(),
-  textureCoords: gl.createBuffer(),
-  tangents: gl.createBuffer(),
-  bitangents: gl.createBuffer(),
+const normalBuffers: BufferBag = {
+  positions: normalGl.createBuffer(),
+  normals: normalGl.createBuffer(),
+  textureCoords: normalGl.createBuffer(),
+  tangents: normalGl.createBuffer(),
+  bitangents: normalGl.createBuffer(),
 };
 
-const programCache: ProgramCache = {
+const basicBuffers: BufferBag = {
+  positions: basicGl.createBuffer(),
+  normals: basicGl.createBuffer(),
+  textureCoords: basicGl.createBuffer(),
+  tangents: basicGl.createBuffer(),
+  bitangents: basicGl.createBuffer(),
+};
+
+const normalProgramCache: ProgramCache = {
   attributes: {},
   uniforms: {},
 };
 
-const tileProgram = compiledProgram(gl, SPRITE_VERT_SHADER, SPRITE_FRAG_SHADER);
+const basicProgramCache: ProgramCache = {
+  attributes: {},
+  uniforms: {},
+};
 
-cacheAttributeLocations(gl, tileProgram, programCache, ATTRIBUTE_NAMES);
-cacheUniformLocations(gl, tileProgram, programCache, UNIFORM_NAMES);
+const normalProgram = compiledProgram(
+  normalGl,
+  SPRITE_VERT_SHADER,
+  SPRITE_FRAG_SHADER
+);
+
+const basicProgram = compiledProgram(
+  basicGl,
+  SPRITE_VERT_SHADER,
+  SPRITE_FRAG_SHADER
+);
+
+cacheAttributeLocations(
+  normalGl,
+  normalProgram,
+  normalProgramCache,
+  ATTRIBUTE_NAMES
+);
+
+cacheUniformLocations(
+  normalGl,
+  normalProgram,
+  normalProgramCache,
+  UNIFORM_NAMES
+);
+
+cacheAttributeLocations(
+  basicGl,
+  basicProgram,
+  basicProgramCache,
+  ATTRIBUTE_NAMES
+);
+
+cacheUniformLocations(basicGl, basicProgram, basicProgramCache, UNIFORM_NAMES);
 
 // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
 function generateTbn() {
@@ -180,23 +235,17 @@ function generateTbn() {
   return { normal, tangent, bitangent };
 }
 
-function render(time) {
-  requestAnimationFrame(render);
-
-  mat4.lookAt(
-    viewMatrix,
-    [camera.x, camera.y, camera.z],
-    [camera.x, camera.y, 0],
-    [0.0, 1.0, 0.0]
-  );
-  mat4.perspective(
-    projectionMatrix,
-    fieldOfView,
-    getAspectRatio(gl.canvas),
-    zNear,
-    zFar
-  );
-  gl.useProgram(tileProgram);
+function renderToGlContext(
+  gl: WebGLRenderingContext,
+  program: WebGLProgram,
+  time: number,
+  programCache: ProgramCache,
+  buffers: BufferBag,
+  texture: WebGLTexture,
+  normalTexture: WebGLTexture,
+  normalMapOn: boolean
+) {
+  gl.useProgram(program);
   gl.clearColor(0.0, 0.0, 0.0, 0.0);
   gl.clearDepth(1.0);
   gl.enable(gl.DEPTH_TEST);
@@ -218,15 +267,16 @@ function render(time) {
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, normalTexture);
 
+  gl.uniform1i(programCache.uniforms.uNormalMapOn, normalMapOn ? 1.0 : 0.0);
   gl.uniform1i(programCache.uniforms.uSpriteSampler, 0);
   gl.uniform1i(programCache.uniforms.uNormalSampler, 1);
   gl.uniform1f(programCache.uniforms.uTime, time / 1000);
 
   // Make light go in a cirlce
   const lightPos = [
-    1 + lightRadius * Math.cos(time / 1000),
-    1 + lightRadius * Math.sin(time / 1000),
-    1,
+    lightOffset + lightRadius * Math.cos(time / 1000),
+    lightOffset + lightRadius * Math.sin(time / 1000),
+    lightZ,
   ];
 
   gl.uniform3fv(programCache.uniforms.uLightPos, lightPos);
@@ -246,7 +296,47 @@ function render(time) {
     buffers["textureCoords"],
     textureCoords
   );
+
   gl.drawArrays(gl.TRIANGLES, 0, vertexPositions.length / 3);
+}
+
+function render(time) {
+  requestAnimationFrame(render);
+
+  mat4.lookAt(
+    viewMatrix,
+    [camera.x, camera.y, camera.z],
+    [camera.x, camera.y, 0],
+    [0.0, 1.0, 0.0]
+  );
+  mat4.perspective(
+    projectionMatrix,
+    fieldOfView,
+    getAspectRatio(normalGl.canvas),
+    zNear,
+    zFar
+  );
+
+  renderToGlContext(
+    normalGl,
+    normalProgram,
+    time,
+    normalProgramCache,
+    normalBuffers,
+    normalProgramTexture,
+    normalProgramNormalTexture,
+    true
+  );
+  renderToGlContext(
+    basicGl,
+    basicProgram,
+    time,
+    basicProgramCache,
+    basicBuffers,
+    basicProgramTexture,
+    basicProgramNormalTexture,
+    false
+  );
 }
 
 requestAnimationFrame(render);

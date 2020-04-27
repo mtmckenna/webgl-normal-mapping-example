@@ -8,7 +8,23 @@
     <link href="./src/style.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    <canvas id="game"></canvas>
+    <div class="page-wrapper">
+      <div class="example-wrapper">
+        <div class="canvas-wrapper">
+          <canvas id="normal-mapping"></canvas>
+          With normal mapping
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="basic"></canvas>
+          Without normal mapping
+        </div>
+      </div>
+      <div>
+        <a href="https://github.com/mtmckenna/webgl-normal-mapping-example"
+          >Code on GitHub</a
+        >
+      </div>
+    </div>
     <script src="./src/index.ts"></script>
   </body>
 </html>

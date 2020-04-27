@@ -1,6 +1,6 @@
 precision highp float;
 
-attribute vec4 aVertexPosition;
+attribute vec3 aVertexPosition;
 attribute vec3 aVertexTangent;
 attribute vec3 aVertexBitangent;
 attribute vec3 aVertexNormal;
@@ -19,7 +19,7 @@ varying vec4 vWorldPos;
 
 
 void main(void) {
-  vec4 worldPos = uModelMatrix * aVertexPosition;
+  vec4 worldPos = uModelMatrix * vec4(aVertexPosition, 1.0);
   gl_Position = uProjectionMatrix * uViewMatrix * worldPos;
   
   vec3 t = normalize(vec3(uModelMatrix * vec4(aVertexTangent, 0.0)));

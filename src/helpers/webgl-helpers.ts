@@ -3,6 +3,10 @@ export interface ProgramCache {
   uniforms: { [key: string]: WebGLUniformLocation | null };
 }
 
+export interface BufferBag {
+  [key: string]: WebGLBuffer;
+}
+
 export function compiledProgram(
   gl: WebGLRenderingContext,
   vertexShader: string,

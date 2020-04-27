@@ -3,16 +3,38 @@
   padding: 0;
   margin: 0;
   border: 0;
-  font-family: "Arial Black", Gadget, sans-serif;
+  font-family: sans-serif;
 }
 
 body {
-  background-color: seagreen;
+  background-color: #8fc99f;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.example-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.canvas-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  justify-content: center;
+  text-align: center;
 }
 
 canvas {
-  image-rendering: crisp-edges;
-  width: 400px;
-  height: 400px;
+  width: 250px;
+  height: 250px;
   background-color: rebeccapurple;
 }
