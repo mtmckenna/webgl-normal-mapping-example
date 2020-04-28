@@ -110,8 +110,8 @@ for (let i = 0; i < vertexPositions.length / 3; i++) {
   vertexNormals.push(...Array.from(tbn.normal));
 }
 
-const textureUrl = `/brick.png`;
-const normalTextureUrl = `/brick-n.png`;
+const textureUrl = `./brick.png`;
+const normalTextureUrl = `./brick-n.png`;
 let normalProgramTexture = loadTexture(normalGl, textureUrl);
 let normalProgramNormalTexture = loadTexture(normalGl, normalTextureUrl);
 let basicProgramTexture = loadTexture(basicGl, textureUrl);
