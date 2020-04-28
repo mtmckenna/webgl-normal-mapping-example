@@ -9,7 +9,6 @@ varying vec4 vWorldPos;
 uniform sampler2D uSpriteSampler;
 uniform sampler2D uNormalSampler;
 uniform vec3 uLightPos;
-uniform float uTime;
 uniform bool uNormalMapOn;
 
 void main(void) {

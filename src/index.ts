@@ -27,7 +27,6 @@ const UNIFORM_NAMES = [
   "uSpriteSampler",
   "uNormalSampler",
   "uNormals",
-  "uTime",
   "uLightPos",
   "uNormalMapOn",
 ];
@@ -50,17 +49,14 @@ const QUAD_POSITIONS = [
   +1.0, +1.0, 0.0,
 ];
 
-const T_TX_MIN = 0.0;
-const T_TX_MAX = 0.5;
-
 // prettier-ignore
 const TEXTURE_COORDS = [
-  T_TX_MIN, T_TX_MIN,
-  T_TX_MIN, T_TX_MAX,
-  T_TX_MAX, T_TX_MIN,
-  T_TX_MIN, T_TX_MAX,
-  T_TX_MAX, T_TX_MAX,
-  T_TX_MAX, T_TX_MIN
+  0.0, 0.0,
+  0.0, 0.5,
+  0.5, 0.0,
+  0.0, 0.5,
+  0.5, 0.5,
+  0.5, 0.0
 ];
 
 const normalCanvas = <HTMLCanvasElement>(
@@ -270,7 +266,6 @@ function renderToGlContext(
   gl.uniform1i(programCache.uniforms.uNormalMapOn, normalMapOn ? 1.0 : 0.0);
   gl.uniform1i(programCache.uniforms.uSpriteSampler, 0);
   gl.uniform1i(programCache.uniforms.uNormalSampler, 1);
-  gl.uniform1f(programCache.uniforms.uTime, time / 1000);
 
   // Make light go in a cirlce
   const lightPos = [
